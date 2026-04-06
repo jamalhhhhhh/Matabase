@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATABASE // ANIMAL_CO_TRACKER</title>
+    <style>
+        :root {
+            --neon-green: #00ff41;
+            --dark-bg: #0a0a0a;
+            --galaxy-purple: #6a0dad;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-image: radial-gradient(circle, #1a1a2e 0%, #0a0a0a 100%);
+        }
+
+        .terminal-container {
+            border: 2px solid var(--neon-green);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 15px var(--galaxy-purple);
+        }
+
+        h1 {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 2px 2px var(--galaxy-purple);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex-grow: 1;
+            background: black;
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 10px;
+            outline: none;
+        }
+
+        button {
+            background: var(--neon-green);
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: var(--galaxy-purple);
+            color: white;
+        }
+
+        #output {
+            border-top: 1px solid var(--neon-green);
+            padding-top: 15px;
+            font-size: 0.9rem;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        .status-online { color: #00ff00; }
+        .status-offline { color: #ff0000; }
+    </style>
+</head>
+<body>
+
+    <h1>> MATABASE_v1.0</h1>
+
+    <div class="terminal-container">
+        <div class="input-group">
+            <input type="text" id="playerId" placeholder="ENTER PLAYER_ID (UUID)...">
+            <button onclick="scanPlayer()">SCAN</button>
+        </div>
+
+        <div id="output">SYSTEM READY. AWAITING INPUT...</div>
+    </div>
+
+    <script>
+        // CHANGE THIS TO YOUR WORKER URL ONCE SSL IS FIXED
+        const WORKER_URL = "https://matabase.noahshoe08.workers.dev"; 
+
+        async function scanPlayer() {
+            const id = document.getElementById('playerId').value;
+            const output = document.getElementById('output');
+
+            if (!id) {
+                output.innerText = "ERROR: PLAYER_ID REQUIRED.";
+                return;
+            }
+
+            output.innerText = "COMMUNICATING WITH NAKAMA_CLOUD...";
+
+            try {
+                const response = await fetch(`${WORKER_URL}/track?id=${id}`);
+                
+                if (!response.ok) throw new Error("NETWORK_REJECTION");
+
+                const data = await response.json();
+
+                output.innerHTML = `
+---------------------------------
+ID: ${id}
+USER: ${data.username}
+STATUS: <span class="${data.online ? 'status-online' : 'status-offline'}">${data.online ? 'ONLINE' : 'OFFLINE'}</span>
+LAST_SEEN: ${new Date(data.last_online).toLocaleString()}
+---------------------------------
+COSMETICS_LOADED:
+${JSON.stringify(data.metadata, null, 2)}
+---------------------------------
+                `;
+            } catch (err) {
+                output.innerText = "CRITICAL_ERROR: UNABLE TO REACH BACKEND.\nCHECK WORKER SSL STATUS.";
+            }
+        }
+    </script>
+</body>
+</html>
