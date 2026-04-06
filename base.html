@@ -2,137 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATABASE // ANIMAL_CO_TRACKER</title>
+    <title>MATABASE // ICYTHECOOLEST</title>
     <style>
         :root {
             --neon-green: #00ff41;
-            --dark-bg: #0a0a0a;
-            --galaxy-purple: #6a0dad;
+            --bg-black: #050505;
+            --galaxy: #6a0dad;
         }
 
         body {
-            background-color: var(--dark-bg);
+            background-color: var(--bg-black);
             color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Courier New', monospace;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
-            background-image: radial-gradient(circle, #1a1a2e 0%, #0a0a0a 100%);
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
         }
 
-        .terminal-container {
-            border: 2px solid var(--neon-green);
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            background: rgba(0, 0, 0, 0.8);
-            box-shadow: 0 0 15px var(--galaxy-purple);
-        }
-
-        h1 {
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            text-shadow: 2px 2px var(--galaxy-purple);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input {
-            flex-grow: 1;
-            background: black;
+        .profile-card {
             border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 10px;
-            outline: none;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            width: 400px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
 
-        button {
-            background: var(--neon-green);
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
+        .header {
+            border-bottom: 1px solid var(--neon-green);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
         }
 
-        button:hover {
-            background: var(--galaxy-purple);
-            color: white;
+        .user-info { margin-bottom: 20px; }
+        .label { color: #888; font-size: 0.8rem; }
+
+        .cosmetics-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border-left: 2px solid var(--galaxy);
+            padding-left: 15px;
         }
 
-        #output {
-            border-top: 1px solid var(--neon-green);
-            padding-top: 15px;
+        .cosmetic-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a1a;
             font-size: 0.9rem;
-            min-height: 100px;
-            white-space: pre-wrap;
         }
 
-        .status-online { color: #00ff00; }
-        .status-offline { color: #ff0000; }
+        .cosmetic-item::before {
+            content: "> ";
+            color: var(--galaxy);
+        }
+
+        #loading { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <h1>> MATABASE_v1.0</h1>
-
-    <div class="terminal-container">
-        <div class="input-group">
-            <input type="text" id="playerId" placeholder="ENTER PLAYER_ID (UUID)...">
-            <button onclick="scanPlayer()">SCAN</button>
+    <div class="profile-card">
+        <div class="header">MATABASE_SCAN</div>
+        
+        <div class="user-info">
+            <span class="label">IDENT_NAME:</span><br>
+            <strong>ICYTHECOOLEST</strong>
         </div>
 
-        <div id="output">SYSTEM READY. AWAITING INPUT...</div>
+        <div class="user-info">
+            <span class="label">COSMETICS_MANIFEST:</span>
+            <ul id="cosmetics-list" class="cosmetics-list">
+                <li id="loading">FETCHING_DATA...</li>
+            </ul>
+        </div>
     </div>
 
     <script>
-        // CHANGE THIS TO YOUR WORKER URL ONCE SSL IS FIXED
-        const WORKER_URL = "https://matabase.noahshoe08.workers.dev"; 
-
-        async function scanPlayer() {
-            const id = document.getElementById('playerId').value;
-            const output = document.getElementById('output');
-
-            if (!id) {
-                output.innerText = "ERROR: PLAYER_ID REQUIRED.";
-                return;
-            }
-
-            output.innerText = "COMMUNICATING WITH NAKAMA_CLOUD...";
+        async function loadProfile() {
+            const list = document.getElementById('cosmetics-list');
+            // Using the API you provided
+            const api = "https://www.questfemboys.xyz/api/users/add?username=ICYTHECOOLEST";
 
             try {
-                const response = await fetch(`${WORKER_URL}/track?id=${id}`);
-                
-                if (!response.ok) throw new Error("NETWORK_REJECTION");
-
+                const response = await fetch(api);
                 const data = await response.json();
 
-                output.innerHTML = `
----------------------------------
-ID: ${id}
-USER: ${data.username}
-STATUS: <span class="${data.online ? 'status-online' : 'status-offline'}">${data.online ? 'ONLINE' : 'OFFLINE'}</span>
-LAST_SEEN: ${new Date(data.last_online).toLocaleString()}
----------------------------------
-COSMETICS_LOADED:
-${JSON.stringify(data.metadata, null, 2)}
----------------------------------
-                `;
+                // Clear loading text
+                list.innerHTML = "";
+
+                // If the API returns an object with cosmetics (adjust keys if different)
+                // Example assuming the API returns { "cosmetics": ["hat", "glasses"] }
+                const items = data.cosmetics || ["No items detected"];
+
+                items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "cosmetic-item";
+                    li.innerText = item.replace(/_/g, " ").toUpperCase();
+                    list.appendChild(li);
+                });
+
             } catch (err) {
-                output.innerText = "CRITICAL_ERROR: UNABLE TO REACH BACKEND.\nCHECK WORKER SSL STATUS.";
+                list.innerHTML = "<li style='color:red'>ERR: UNAVILABLE_PROTOCOL</li>";
             }
         }
+
+        loadProfile();
     </script>
 </body>
 </html>
